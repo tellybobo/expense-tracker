@@ -15,15 +15,28 @@ function App() {
   const[category, setCategory] = useState("Food")
   const[date, setDate] = useState(new Date().toISOString().split("T")[0])
   const[editingId, setEditingId] = useState(null)
-  const[transactions, setTransactions] = useState(()=> {
-  const savedTransactions = localStorage.getItem("transactions")
+  const [transactions, setTransactions] = useState([])
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  useEffect(() => {
+  const fetchTransactions = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/transactions");
 
-  return savedTransactions
-  ? JSON.parse(savedTransactions)
-  :[]
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
+      }
 
-  })
-  
+      const data = await response.json();
+      setTransactions(data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  fetchTransactions();
+}, []);
   
 const [monthlyBudget, setMonthlyBudget] = useState(() => {
   const savedBudget = localStorage.getItem("monthlyBudget");
@@ -50,18 +63,8 @@ const [monthlyBudget, setMonthlyBudget] = useState(() => {
   .reduce((total, transaction)=> total + transaction.amount, 0)
 
   const totalBalance = totalIncome - totalExpenses
-
-   
-  useEffect(()=> {
-    localStorage.setItem(
-      "transactions", 
-      JSON.stringify(transactions)
-
-    )
-  }, [transactions])
   
-  
-const handleAddTransaction = (e) => {
+const handleAddTransaction = async (e) => {
   e.preventDefault()
 
   if (!title.trim() || !amount || Number(amount) <= 0) {
@@ -70,57 +73,121 @@ const handleAddTransaction = (e) => {
   }
 
   if (editingId !== null) {
-    setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        transaction.id === editingId
-          ? {
-              ...transaction,
-              title: title.trim(),
-              amount: Number(amount),
-              type: type,
-            }
-          : transaction
-      )
-    )
-  } else {
-    const newTransaction = {
-      id: Date.now(), 
-      title: title.trim(),
-      amount: Number(amount),
-      type: type,
-      category: category,
-      date: date
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/transactions/${editingId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            amount: Number(amount),
+            type: type,
+            category: category,
+            date: date,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update transaction");
+      }
+
+      const updatedTransaction = await response.json();
+
+      setTransactions((prevTransactions) =>
+        prevTransactions.map((transaction) =>
+          transaction._id === editingId ? updatedTransaction : transaction
+        )
+      );
+
+      setEditingId(null);
+      setTitle("");
+      setAmount("");
+      setShowTransactionForm(false);
+
+    } catch (error) {
+      console.error("Error updating transaction:", error);
     }
 
-    setTransactions((prevTransactions) => [
-      ...prevTransactions,
-      newTransaction,
-    ])
-  }
+  } else {
+    try {
+      const response = await fetch("http://localhost:5000/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          amount: Number(amount),
+          type: type,
+          category: category,
+          date: date,
+        }),
+      });
 
-  setTitle("")
-  setAmount("")
-  setType("expense")
-  setEditingId(null)
-  setShowTransactionForm(false)
-  setCategory("Food")
+      if (!response.ok) {
+        throw new Error("Failed to save transaction");
+      }
+
+      const newTransaction = await response.json();
+
+      setTransactions((prevTransactions) => [
+        ...prevTransactions,
+        newTransaction,
+      ]);
+
+      setTitle("");
+      setAmount("");
+      setShowTransactionForm(false);
+
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+      alert("Could not save transaction. Please try again.");
+    }
+  }
 }
 
 
-  const handleEditTransaction = (transaction)=>{
-        setTitle(transaction.title)
-        setAmount(String(transaction.amount))
-        setType(transaction.type)
-        setEditingId(transaction.id)
-        setShowTransactionForm(true)
-      }
+  const handleEditTransaction = (transaction) => {
+  setTitle(transaction.title)
+  setAmount(String(transaction.amount))
+  setType(transaction.type)
+  setCategory(transaction.category)
+  setDate(transaction.date.slice(0, 10))
+  setEditingId(transaction._id) 
+  setShowTransactionForm(true)
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
-  const handleDeleteTransaction = (id) => {
-    setTransactions((prevTransactions)=>
-    prevTransactions.filter(
-      (transaction)=>transaction.id !==id 
-    ))
+    
+  
+const handleDeleteTransaction = async (id) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/transactions/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+  const errorMessage = await response.text();
+  console.error("Delete response:", response.status, errorMessage);
+  throw new Error("Failed to delete transaction");
+}
+    setTransactions((prevTransactions) =>
+      prevTransactions.filter(
+        (transaction) => transaction._id !== id
+      )
+    );
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+    alert("Could not delete transaction. Please try again.");
   }
+};
 
   const filteredTransactions = transactions.filter((transaction)=> {
     const matchesType = filterType === "all" || transaction.type 
@@ -146,7 +213,7 @@ const handleAddTransaction = (e) => {
 
     const monthlyTransactions = transactions.filter((transaction) => {
       if (!transaction.date) return false
-      const transactionDate = new Date(`${transaction.date}T00:00:00`)
+      const transactionDate = new Date(transaction.date.slice(0, 10) + 'T00:00:00')
 
       return (
         transactionDate.getFullYear()===year
@@ -416,10 +483,11 @@ const budgetRemaining = monthlyBudget - currentMonthExpenses;
         </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
-            type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 sm:w-auto">
-              Save Transaction
-            </button>
+  type="submit"
+  onClick={() => console.log('editingId at button click:', editingId)}
+  className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 sm:w-auto">
+  Save Transaction
+</button>
             <button
             type="button"
             onClick={()=> 
@@ -715,7 +783,7 @@ className="text-sm font-medium text-blue-600 hover:text-blue-800">
           ):(
             filteredTransactions.map((transaction)=> (
               <div
-              key={transaction.id}
+              key={transaction._id}
   className="flex flex-col gap-3 rounded-lg border border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h4 className="font-medium">
@@ -756,7 +824,7 @@ className="text-sm font-medium text-blue-600 hover:text-blue-800">
               </button>
               <button
               onClick={()=> 
-                handleDeleteTransaction(transaction.id)
+                handleDeleteTransaction(transaction._id)
               }
               className="rounded-lg px-3 py-2 text-sm text-red-600
               hover:bg-red-red">
