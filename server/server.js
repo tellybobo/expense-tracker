@@ -8,7 +8,7 @@ const authMiddleware = require('./authMiddleware');
 const User = require('./User');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected successfully!'))
