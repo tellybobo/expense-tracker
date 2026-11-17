@@ -3,7 +3,7 @@ import { faBars, faXmark, faTrash, faPenToSquare } from '@fortawesome/free-solid
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { useEffect,  useState } from "react"
 
-function App() {
+function App({ onLogout }) {
   const[sidebarOpen, setSidebarOpen] = useState(false)
   const[showTransactionForm, setShowTransactionForm] = useState(false)
   const[title, setTitle] = useState("")
@@ -20,8 +20,11 @@ function App() {
   useEffect(() => {
   const fetchTransactions = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/transactions");
-
+      const response = await fetch("http://localhost:5000/api/transactions", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
       if (!response.ok) {
         throw new Error("Failed to fetch transactions");
       }
@@ -38,22 +41,33 @@ function App() {
   fetchTransactions();
 }, []);
   
-const [monthlyBudget, setMonthlyBudget] = useState(() => {
-  const savedBudget = localStorage.getItem("monthlyBudget");
-  return savedBudget !== null ? Number(savedBudget) : 0;
-});
-
+const [monthlyBudget, setMonthlyBudget] = useState(0)
   const[draftBudget, setDraftBudget] = useState(String(monthlyBudget));
 
   const [isEditingBudget, setIsEditingBudget] = useState(false)
 
-  useEffect(()=> {
-    localStorage.setItem("monthlyBudget", monthlyBudget);
+  useEffect(() => {
+  const fetchBudget = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/budget", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
 
-  }, [monthlyBudget]);
+      if (!response.ok) {
+        throw new Error("Failed to fetch budget")
+      }
 
-  console.log("Transactions loaded:", transactions)
+      const data = await response.json()
+      setMonthlyBudget(data.monthlyBudget)
+    } catch (error) {
+      console.error("Error fetching budget:", error)
+    }
+  }
 
+  fetchBudget()
+}, [])
   const totalIncome = transactions
   .filter((transaction)=>transaction.type === "income")
   .reduce((total, transaction)=> total + transaction.amount, 0)
@@ -79,8 +93,9 @@ const handleAddTransaction = async (e) => {
         {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
-          },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
           body: JSON.stringify({
             title: title.trim(),
             amount: Number(amount),
@@ -117,8 +132,9 @@ const handleAddTransaction = async (e) => {
       const response = await fetch("http://localhost:5000/api/transactions", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-        },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
         body: JSON.stringify({
           title: title.trim(),
           amount: Number(amount),
@@ -166,12 +182,16 @@ const handleAddTransaction = async (e) => {
   
 const handleDeleteTransaction = async (id) => {
   try {
-    const response = await fetch(
-      `http://localhost:5000/api/transactions/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+    
+const response = await fetch(
+  `http://localhost:5000/api/transactions/${id}`,
+  {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  }
+);
 
     if (!response.ok) {
   const errorMessage = await response.text();
@@ -330,6 +350,14 @@ const budgetRemaining = monthlyBudget - currentMonthExpenses;
     </div>
     <p className="mt-2 text-sm
     text-gray-500">Manage your money better</p>
+    
+<button
+  onClick={onLogout}
+  className="mt-6 w-full rounded-lg border border-red-200 px-4 py-3 text-left font-medium text-red-600 hover:bg-red-50"
+>
+  Log Out
+</button>
+
     <nav className="mt-8 space-y-2">
 
       <a 
@@ -580,14 +608,32 @@ className="text-sm font-medium text-blue-600 hover:text-blue-800">
       />
 
       <button
-        onClick={() => {
-          const amount = Number(draftBudget);
+        onClick={async () => {
+  const amount = Number(draftBudget);
 
-          if (amount > 0 && Number.isFinite(amount)) {
-            setMonthlyBudget(amount);
-            setIsEditingBudget(false);
-          }
-        }}
+  if (amount > 0 && Number.isFinite(amount)) {
+    try {
+      const response = await fetch("http://localhost:5000/api/budget", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ monthlyBudget: amount }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save budget")
+      }
+
+      setMonthlyBudget(amount);
+      setIsEditingBudget(false);
+    } catch (error) {
+      console.error("Error saving budget:", error)
+      alert("Could not save budget. Please try again.")
+    }
+  }
+}}
         className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
       >
         Save
