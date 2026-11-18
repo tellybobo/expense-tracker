@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faBars, faXmark, faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { useEffect,  useState } from "react"
+const API_URL = "https://expense-tracker-q9tr.onrender.com"
 
 function App({ onLogout }) {
   const[sidebarOpen, setSidebarOpen] = useState(false)
@@ -20,7 +21,7 @@ function App({ onLogout }) {
   useEffect(() => {
   const fetchTransactions = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/transactions", {
+      const response = await fetch(`${API_URL}/api/transactions`, {
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   },
@@ -49,7 +50,7 @@ const [monthlyBudget, setMonthlyBudget] = useState(0)
   useEffect(() => {
   const fetchBudget = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/budget", {
+      const response = await fetch(`${API_URL}/api/budget`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -89,7 +90,7 @@ const handleAddTransaction = async (e) => {
   if (editingId !== null) {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/transactions/${editingId}`,
+        `${API_URL}/api/transactions/${editingId}`,
         {
           method: "PUT",
           headers: {
@@ -129,7 +130,7 @@ const handleAddTransaction = async (e) => {
 
   } else {
     try {
-      const response = await fetch("http://localhost:5000/api/transactions", {
+      const response = await fetch(`${API_URL}/api/transactions`, {
         method: "POST",
         headers: {
   "Content-Type": "application/json",
@@ -184,7 +185,7 @@ const handleDeleteTransaction = async (id) => {
   try {
     
 const response = await fetch(
-  `http://localhost:5000/api/transactions/${id}`,
+  `${API_URL}/api/transactions/${id}`,
   {
     method: "DELETE",
     headers: {
@@ -613,7 +614,7 @@ className="text-sm font-medium text-blue-600 hover:text-blue-800">
 
   if (amount > 0 && Number.isFinite(amount)) {
     try {
-      const response = await fetch("http://localhost:5000/api/budget", {
+      const response = await fetch(`${API_URL}/api/budget`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
