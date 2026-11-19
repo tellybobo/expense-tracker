@@ -1,57 +1,53 @@
-ExpenseTrack 💰 
+# ExpenseTrack
 
-ExpenseTrack is a responsive expense tracking application developed using React, Vite, and Tailwind CSS. It empowers users to effectively manage their transactions, monitor spending habits, and keep a close eye on their budget.
+A full-stack expense tracker where each user has a private account, their own transactions, and their own monthly budget.
 
-🚀 Live Demo 
-Check out ExpenseTrack here!
+**Live demo:** https://expense-tracker-three-bay-14.vercel.app/
+**Note:** the backend runs on a free plan, so the first request after a quiet period can take up to a minute to wake up.
 
-✨ Features
-- Add, edit, and delete transactions easily  
-- Track both income and expenses, along with your available balance  
-- Search for transactions by title  
-- Filter transactions by category  
-- Set a monthly budget and keep tabs on your spending  
-- Visualize your financial activity with engaging charts  
-- Save transactions using your browser's localStorage  
-- Enjoy a responsive design that works on both desktop and mobile devices  
+![ExpenseTrack dashboard](Screenshot (275).png)
 
-🛠️ Built With  
-- React  
-- JavaScript  
-- Vite  
-- Tailwind CSS  
-- Recharts  
-- Font Awesome  
-- Browser localStorage  
-- Vercel  
+## Features
 
-💻 Run Locally  
-Prerequisites  
-- Node.js  
-- npm  
+- Register and log in with a secure account (passwords are hashed, sessions use JWT)
+- Add, edit and delete transactions
+- Each user only sees their own data
+- Monthly budget with a progress bar and remaining amount
+- Income vs. expenses chart for the last 6 months
+- Spending-by-category chart
+- Filter by type and category, and search by title
+- Responsive layout that works on phone and laptop
 
-Installation  
-1. Clone the repository:  
-   `git clone https://github.com/tellybobo/expense-tracker.git`  
-2. Navigate to the project folder:  
-   `cd expense-tracker`  
-3. Install the necessary dependencies:  
-   `npm install`  
-4. Start the development server:  
-   `npm run dev`  
-5. Open the local URL displayed in your terminal.
+## Tech Stack
 
-💾 Data Storage  
-ExpenseTrack currently saves transaction data in the browser using localStorage. Note that this data isn’t synchronized across different devices or users, and clearing your browser's site data may result in the loss of saved transactions.
+- **Frontend:** React, Vite, Tailwind CSS, Recharts, React Router
+- **Backend:** Node.js, Express
+- **Database:** MongoDB Atlas with Mongoose
+- **Auth:** JSON Web Tokens, bcryptjs
+- **Hosting:** Vercel (frontend), Render (backend)
 
-🔮 What's Next?  
-- Build a REST API using Node.js and Express  
-- Integrate MongoDB for persistent data storage  
-- Add user authentication features  
-- Link the frontend to the backend  
+## Run it locally
 
-👨‍💻 Author  
-Tellybobo  
-GitHub: @tellybobo  
+1. Clone the repo and install dependencies:
+    ```
+    npm install
+    cd server
+    npm install
+    ```
+2. Create `server/.env` with:
+    ```
+    MONGODB_URI=your_mongodb_connection_string
+    JWT_SECRET=your_secret
+    ```
+3. Start the backend: `cd server`, then `node server.js`
+4. Start the frontend from the project root: `npm run dev`
 
-This project marks a significant step in my journey of learning and building web applications.
+## What I learned
+
+## What I Learned
+
+Building ExpenseTrack taught me how a full-stack app fits together. I connected a React frontend hosted on Vercel to a Node and Express backend hosted on Render, and learned how both talk to a MongoDB Atlas database. I also learned how to protect user data with JWT authentication, so each account only sees its own transactions and budget. Most of all, I got better at debugging: tracing a problem through the browser console, the Network tab and server logs until I found the real cause.
+
+## Author
+
+TellyBobo - https://t.co/Unb0ZMb680
