@@ -27,7 +27,12 @@ function App({ onLogout }) {
   },
 });
       if (!response.ok) {
+        if (response.status === 401) {
+  onLogout()
+  return
+}
         throw new Error("Failed to fetch transactions");
+
       }
 
       const data = await response.json();
@@ -57,6 +62,10 @@ const [monthlyBudget, setMonthlyBudget] = useState(0)
       })
 
       if (!response.ok) {
+        if (response.status === 401) {
+            onLogout()
+      return
+}
         throw new Error("Failed to fetch budget")
       }
 
@@ -291,7 +300,7 @@ const response = await fetch(
       return false;
     }
 
-  const transactionDate = new Date(`${transaction.date}T00:00:00`);
+  const transactionDate = new Date(transaction.date.slice(0, 10) + 'T00:00:00');
   const today = new Date();
 
   return (
@@ -311,7 +320,7 @@ const budgetPercentage =
     ? (currentMonthExpenses / monthlyBudget) * 100
     : 0;
 const budgetRemaining = monthlyBudget - currentMonthExpenses;
-  console.log("Monthly chart data:", monthlyChartData)
+  
 
   return (
     <div className="min-h-screen
@@ -433,7 +442,7 @@ const budgetRemaining = monthlyBudget - currentMonthExpenses;
       <div className="mb-8 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h3
         className="mb-4 text-xl font-semibold">
-          Add New Transaction
+          {editingId ? "Edit Transaction" : "Add New Transaction"}
         </h3>
         <form onSubmit={handleAddTransaction}>
           <div className="mb-4">
@@ -507,13 +516,12 @@ const budgetRemaining = monthlyBudget - currentMonthExpenses;
               <input type="date" 
               value={date}
               onChange={(e)=>setDate(e.target.value)}
-              className="w-full founded-lg border border-gray-300 p-3"/>
+              className="w-full rounded-lg border border-gray-300 p-3"/>
             </div>
         </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
   type="submit"
-  onClick={() => console.log('editingId at button click:', editingId)}
   className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 sm:w-auto">
   Save Transaction
 </button>
@@ -874,7 +882,7 @@ className="text-sm font-medium text-blue-600 hover:text-blue-800">
                 handleDeleteTransaction(transaction._id)
               }
               className="rounded-lg px-3 py-2 text-sm text-red-600
-              hover:bg-red-red">
+              hover:bg-red-50">
                 <FontAwesomeIcon icon={faTrash}/>
               </button>
 
