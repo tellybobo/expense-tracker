@@ -5,7 +5,7 @@ A full-stack expense tracker where each user has a private account, their own tr
 **Live demo:** https://expense-tracker-three-bay-14.vercel.app/
 **Note:** the backend runs on a free plan, so the first request after a quiet period can take up to a minute to wake up.
 
-![ExpenseTrack dashboard](Screenshot (275).png)
+![ExpenseTrack dashboard]![(Screenshot.png)]
 
 ## Features
 
