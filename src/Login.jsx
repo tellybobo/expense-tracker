@@ -34,7 +34,33 @@ function Login({ onLogin }) {
       setLoading(false)
     }
   }
+  
 
+  const handleDemo = async () => {
+  setLoading(true)
+  setError("")
+
+  try {
+    const response = await fetch(`${API_URL}/api/auth/demo`, {
+      method: "POST",
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message)
+    }
+
+    localStorage.setItem("token", data.token)
+    localStorage.setItem("name", data.name)
+    onLogin()
+
+  } catch (error) {
+    setError(error.message)
+  } finally {
+    setLoading(false)
+  }
+}
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -77,6 +103,13 @@ function Login({ onLogin }) {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+          <button
+            type="button"
+            onClick={handleDemo}
+            disabled={loading}
+            className="mt-3 w-full rounded-lg border border-gray-300 py-3 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+            Try the demo
+       </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-500">
